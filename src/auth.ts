@@ -1,7 +1,6 @@
 import { promises as fs } from "fs";
 import * as path from "path";
 import { OAuth2Client, Credentials } from "google-auth-library";
-import { authenticate } from "@google-cloud/local-auth";
 
 // Define constants
 const SCOPES = [
@@ -13,32 +12,14 @@ const TOKEN_PATH =
 	process.env.TOKEN_PATH || path.join(process.cwd(), "token.json");
 const CREDENTIALS_PATH =
 	process.env.CREDENTIALS_PATH || path.join(process.cwd(), "credentials.json");
+const REDIRECT_URI = "http://localhost:3000/oauth2callback"; // Replace with your redirect URI
 
 /**
- * Load previously saved credentials from the token file.
+ * Logs messages if verbose mode is enabled.
  */
-export async function loadSavedCredentialsIfExist(): Promise<OAuth2Client | null> {
-	try {
-		console.log("Loading saved credentials from token.json...");
-		const content = await fs.readFile(TOKEN_PATH, "utf-8");
-		const credentials: Credentials = JSON.parse(content);
-
-		if (!credentials.refresh_token) {
-			throw new Error("Missing refresh token in the saved credentials.");
-		}
-
-		const client = await loadOAuthClient(credentials);
-		await checkAndRefreshToken(client, credentials);
-		return client;
-	} catch (err) {
-		if ((err as NodeJS.ErrnoException).code === "ENOENT") {
-			console.log(
-				"No saved credentials found (token.json missing). Requesting new authorization...",
-			);
-		} else {
-			console.error("Error loading saved credentials:", err);
-		}
-		return null;
+function log(message: string, verbose: boolean) {
+	if (verbose) {
+		console.log(message);
 	}
 }
 
@@ -47,14 +28,67 @@ export async function loadSavedCredentialsIfExist(): Promise<OAuth2Client | null
  */
 async function loadOAuthClient(
 	credentials: Credentials,
+	verbose: boolean,
 ): Promise<OAuth2Client> {
-	console.log("Loading OAuth2 client with credentials...");
+	log("Loading OAuth2 client with credentials...", verbose);
 	const content = await fs.readFile(CREDENTIALS_PATH, "utf-8");
 	const { client_id, client_secret, redirect_uris } = JSON.parse(content).web;
 
-	const client = new OAuth2Client(client_id, client_secret, redirect_uris[0]);
+	const client = new OAuth2Client(
+		client_id,
+		client_secret,
+		redirect_uris[0] || REDIRECT_URI,
+	);
 	client.setCredentials(credentials);
 	return client;
+}
+
+/**
+ * Generate consent URL for manual authorization with offline access
+ */
+export async function getConsentUrl(): Promise<string> {
+	const content = await fs.readFile(CREDENTIALS_PATH, "utf-8");
+	const { client_id, client_secret, redirect_uris } = JSON.parse(content).web;
+
+	const oauth2Client = new OAuth2Client(
+		client_id,
+		client_secret,
+		redirect_uris[0] || REDIRECT_URI,
+	);
+
+	const consentUrl = oauth2Client.generateAuthUrl({
+		access_type: "offline", // This ensures a refresh token is returned
+		scope: SCOPES,
+		prompt: "consent", // Ensures the user is prompted for consent every time
+	});
+
+	return consentUrl;
+}
+
+/**
+ * Exchange authorization code for access and refresh tokens.
+ */
+export async function handleAuthCode(
+	code: string,
+	verbose: boolean,
+): Promise<OAuth2Client> {
+	const content = await fs.readFile(CREDENTIALS_PATH, "utf-8");
+	const { client_id, client_secret, redirect_uris } = JSON.parse(content).web;
+
+	const oauth2Client = new OAuth2Client(
+		client_id,
+		client_secret,
+		redirect_uris[0] || REDIRECT_URI,
+	);
+
+	// Exchange code for tokens
+	const { tokens } = await oauth2Client.getToken(code);
+	oauth2Client.setCredentials(tokens);
+
+	// Save the credentials (including refresh token if available)
+	await saveCredentials(oauth2Client, verbose);
+
+	return oauth2Client;
 }
 
 /**
@@ -63,23 +97,34 @@ async function loadOAuthClient(
 async function checkAndRefreshToken(
 	client: OAuth2Client,
 	credentials: Credentials,
+	verbose: boolean,
 ): Promise<void> {
 	const currentTime = Date.now();
 	const tokenExpiry = credentials.expiry_date;
 
 	if (tokenExpiry && currentTime >= tokenExpiry - TOKEN_EXPIRY_THRESHOLD_MS) {
-		console.log("Token is expiring soon, refreshing...");
-		const newTokens = await client.refreshAccessToken(); // Refresh the token
-		client.setCredentials(newTokens.credentials);
-		await saveCredentials(client); // Save the updated token
+		log("Token is expiring soon, refreshing...", verbose);
+		try {
+			const newTokens = await client.refreshAccessToken(); // Refresh the token
+			client.setCredentials(newTokens.credentials);
+			await saveCredentials(client, verbose); // Save the updated token
+		} catch (error) {
+			console.error(
+				"Error refreshing token, possibly due to deleted permissions:",
+				error,
+			);
+		}
 	}
 }
 
 /**
  * Save credentials to the token.json file.
  */
-async function saveCredentials(client: OAuth2Client): Promise<void> {
-	console.log("Saving credentials to token.json...");
+async function saveCredentials(
+	client: OAuth2Client,
+	verbose: boolean,
+): Promise<void> {
+	log("Saving credentials to token.json...", verbose);
 	const content = await fs.readFile(CREDENTIALS_PATH, "utf-8");
 	const { client_id, client_secret } = JSON.parse(content).web;
 
@@ -93,41 +138,31 @@ async function saveCredentials(client: OAuth2Client): Promise<void> {
 	});
 
 	await fs.writeFile(TOKEN_PATH, payload);
-	console.log("Credentials saved successfully.");
+	log("Credentials saved successfully.", verbose);
 }
 
 /**
  * Authorize the client, loading saved credentials or requesting new authorization.
  */
-export async function authorize(): Promise<OAuth2Client> {
-	let client = await loadSavedCredentialsIfExist();
+export async function authorize(
+	verbose: boolean = true,
+): Promise<OAuth2Client> {
+	try {
+		// Check if token already exists
+		const credentials = JSON.parse(
+			await fs.readFile(TOKEN_PATH, "utf-8"),
+		) as Credentials;
 
-	if (client) {
-		console.log("Using saved credentials...");
+		// Load OAuth client using existing credentials
+		const client = await loadOAuthClient(credentials, verbose);
+
+		// Refresh the token if necessary
+		await checkAndRefreshToken(client, credentials, verbose);
+
 		return client;
+	} catch (err) {
+		// If no token found, ask for new authorization
+		console.log("No saved credentials found, requesting new authorization...");
+		throw new Error("Authorization required. Please visit the consent URL.");
 	}
-
-	console.log("Requesting new authorization...");
-	client = await authenticate({
-		scopes: SCOPES,
-		keyfilePath: CREDENTIALS_PATH,
-	});
-
-	if (client.credentials) {
-		console.log("Authorization successful, credentials:", client.credentials);
-
-		if (client.credentials.refresh_token) {
-			console.log("Refresh token received.");
-		} else {
-			console.warn(
-				"No refresh token returned. Reauthorization may be required in the future.",
-			);
-		}
-
-		await saveCredentials(client);
-	} else {
-		console.error("Authorization failed, no credentials returned.");
-	}
-
-	return client;
 }

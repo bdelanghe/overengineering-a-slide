@@ -9,7 +9,8 @@ import { authorize } from "./auth"; // Import the `authorize` function from auth
 export async function createPresentation(
 	title: string,
 ): Promise<slides_v1.Schema$Presentation> {
-	const auth = await authorize(); // Use the existing authorize function to authenticate
+	// Use the existing authorize function to authenticate, with verbose logging enabled
+	const auth = await authorize(true);
 	const slidesApi = google.slides({ version: "v1", auth });
 
 	try {
