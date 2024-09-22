@@ -24,8 +24,6 @@ lint:
 actions:
   enabled:
     - npm-check
-    - commitizen
-    - commitlint
     - trunk-announce
     - trunk-check-pre-push # Runs checks before pushing code
     - trunk-fmt-pre-commit # Formats code on commit
@@ -36,6 +34,3 @@ plugins:
     - id: trunk
       uri: https://github.com/trunk-io/plugins
       ref: v1.6.2
-tools:
-  enabled:
-    - commitizen@4.3.0
