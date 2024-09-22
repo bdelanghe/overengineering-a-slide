@@ -7,7 +7,7 @@
     "start": "node --no-deprecation dist/index.js & node dist/server.js",
     "build": "npx tsc"
   },
-  "author": "Your Name",
+  "author": "Robert DeLanghe",
   "license": "MIT",
   "dependencies": {
     "@google-cloud/local-auth": "^2.1.0",
