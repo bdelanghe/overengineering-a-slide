@@ -23,6 +23,7 @@ lint:
 
 actions:
   enabled:
+    - commitizen
     - commitlint
     - npm-check
     - trunk-announce
