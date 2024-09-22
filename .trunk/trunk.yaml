@@ -36,3 +36,6 @@ plugins:
     - id: trunk
       uri: https://github.com/trunk-io/plugins
       ref: v1.6.2
+tools:
+  enabled:
+    - commitizen@4.3.0
