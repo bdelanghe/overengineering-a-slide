@@ -9,8 +9,12 @@ const SCOPES = [
 	"https://www.googleapis.com/auth/drive.file",
 ];
 const TOKEN_EXPIRY_THRESHOLD_MS = 300000; // 5 minutes
-const TOKEN_PATH = path.join(process.cwd(), "token.json");
-const CREDENTIALS_PATH = path.join(process.cwd(), "credentials.json");
+
+// Paths for credentials and token files
+const TOKEN_PATH =
+	process.env.TOKEN_PATH || path.join(process.cwd(), "token.json");
+const CREDENTIALS_PATH =
+	process.env.CREDENTIALS_PATH || path.join(process.cwd(), "credentials.json");
 
 /**
  * Reads previously authorized credentials from the save file.
@@ -19,10 +23,12 @@ const CREDENTIALS_PATH = path.join(process.cwd(), "credentials.json");
  */
 export async function loadSavedCredentialsIfExist(): Promise<OAuth2Client | null> {
 	try {
+		console.log("Loading saved credentials from token.json...");
 		const content = await fs.readFile(TOKEN_PATH, "utf-8");
 		const credentials: Credentials = JSON.parse(content);
 
 		if (!credentials.refresh_token) {
+			console.error("Missing refresh token in the saved credentials.");
 			throw new Error("Missing refresh token in the saved credentials.");
 		}
 
@@ -33,10 +39,18 @@ export async function loadSavedCredentialsIfExist(): Promise<OAuth2Client | null
 
 		return client;
 	} catch (err) {
-		if (err instanceof Error) {
-			console.log("Error loading saved credentials:", err.message);
+		// Check if the error is a NodeJS error and has a code property
+		if (
+			err instanceof Error &&
+			(err as NodeJS.ErrnoException).code === "ENOENT"
+		) {
+			console.log(
+				"No saved credentials found (token.json missing). Requesting new authorization...",
+			);
+		} else if (err instanceof Error) {
+			console.error("Error loading saved credentials:", err.message);
 		} else {
-			console.log("Unknown error loading saved credentials:", err);
+			console.error("Unknown error loading saved credentials:", err);
 		}
 		return null;
 	}
@@ -51,6 +65,7 @@ export async function loadSavedCredentialsIfExist(): Promise<OAuth2Client | null
 export async function loadOAuthClient(
 	credentials: Credentials,
 ): Promise<OAuth2Client> {
+	console.log("Loading OAuth2 client with credentials...");
 	const content = await fs.readFile(CREDENTIALS_PATH, "utf-8");
 	const key = JSON.parse(content);
 
@@ -89,6 +104,7 @@ async function checkAndRefreshToken(
  * @return {Promise<void>}
  */
 export async function saveCredentials(client: OAuth2Client): Promise<void> {
+	console.log("Saving credentials to token.json...");
 	const content = await fs.readFile(CREDENTIALS_PATH, "utf-8");
 	const keys = JSON.parse(content);
 
@@ -102,6 +118,7 @@ export async function saveCredentials(client: OAuth2Client): Promise<void> {
 	});
 
 	await fs.writeFile(TOKEN_PATH, payload);
+	console.log("Credentials saved successfully.");
 }
 
 /**
@@ -124,7 +141,10 @@ export async function authorize(): Promise<OAuth2Client> {
 	});
 
 	if (client.credentials) {
+		console.log("Authorization successful, saving new credentials...");
 		await saveCredentials(client);
+	} else {
+		console.error("Authorization failed, no credentials returned.");
 	}
 
 	return client;
