@@ -1,0 +1,13 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "ignorePaths": ["node_modules", "dist"],
+  "dictionaries": ["project-terms"],
+  "dictionaryDefinitions": [
+    {
+      "name": "project-terms",
+      "path": ".trunk/project-terms.txt"
+    }
+  ],
+  "words": ["overengineering", "overengineered"]
+}

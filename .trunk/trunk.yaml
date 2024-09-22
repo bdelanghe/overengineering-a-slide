@@ -4,28 +4,30 @@ cli:
 
 runtimes:
   enabled:
+    - python@3.10.8
     - node@18.12.1
 
 lint:
   enabled:
-    - prettier@3.3.3 # Code formatting
-    - eslint@9.10.0 # TypeScript/JavaScript linting
-    - markdownlint@0.41.0 # Markdown linting
+    - checkov@3.2.255
+    - osv-scanner@1.8.5
+    - trufflehog@3.82.2
+    - yamllint@1.35.1
+    - prettier@3.3.3 # Hermetically installed version of Prettier for formatting
+    - eslint@9.10.0 # Hermetically installed ESLint for TypeScript/JavaScript linting
+    - markdownlint@0.41.0 # Hermetically installed Markdown linter
     - git-diff-check # Check for uncommitted changes
-
-  disabled:
-    - checkov # Infrastructure security (not needed for this project)
-    - trufflehog # Secret scanning (not needed for this project)
-    - yamllint # YAML linting (not needed for this project)
+    - cspell@node # Hermetically installed CSpell for spell checking
 
 actions:
   enabled:
     - trunk-announce
-    - trunk-check-pre-push
-    - trunk-fmt-pre-commit
-    - trunk-upgrade-available
+    - trunk-check-pre-push # Runs checks before pushing code
+    - trunk-fmt-pre-commit # Formats code on commit
+    - trunk-upgrade-available # Automatically keeps trunk up to date
+
 plugins:
   sources:
     - id: trunk
-      ref: v1.6.2
       uri: https://github.com/trunk-io/plugins
+      ref: v1.6.2
