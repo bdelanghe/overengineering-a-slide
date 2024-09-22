@@ -5,7 +5,7 @@ import { authorize } from "./authService";
 export async function getPresentationByTitle(
 	title: string,
 ): Promise<slides_v1.Schema$Presentation | null> {
-	const auth = await authorize(true);
+	const auth = await authorize(true); // Pass the verbose argument
 	const drive = google.drive({ version: "v3", auth });
 
 	try {
@@ -15,7 +15,6 @@ export async function getPresentationByTitle(
 		});
 
 		const files = response.data.files;
-
 		if (files && files.length > 0) {
 			const presentationId = files[0].id;
 			if (!presentationId) {
@@ -25,7 +24,7 @@ export async function getPresentationByTitle(
 			const slides = google.slides({ version: "v1", auth });
 			const presentation = await slides.presentations.get({ presentationId });
 
-			return presentation.data as slides_v1.Schema$Presentation;
+			return presentation.data as slides_v1.Schema$Presentation; // Return the presentation
 		} else {
 			return null;
 		}
@@ -35,93 +34,113 @@ export async function getPresentationByTitle(
 	}
 }
 
-// Create or fetch a Google Slide presentation and update the first slide's title
-export async function createOrUpdatePresentation(
+// Create a new Google Slide presentation
+export async function createPresentation(
 	title: string,
 ): Promise<slides_v1.Schema$Presentation> {
-	const existingPresentation = await getPresentationByTitle(title);
-
-	if (existingPresentation) {
-		console.log(`Presentation with title "${title}" already exists.`);
-		return existingPresentation;
-	}
-
-	// Create a new presentation
-	const auth = await authorize(true);
+	const auth = await authorize(true); // Pass the verbose argument
 	const slidesApi = google.slides({ version: "v1", auth });
 
 	try {
-		const presentation = (
-			await slidesApi.presentations.create({
-				requestBody: {
-					title,
-				},
-			})
-		).data as slides_v1.Schema$Presentation;
+		const presentation = await slidesApi.presentations.create({
+			requestBody: {
+				title,
+			},
+		});
 
 		console.log(
-			`Created new presentation with ID: ${presentation?.presentationId}`,
+			`Created presentation with ID: ${presentation.data?.presentationId}`,
 		);
-
-		// Retrieve the first slide's title box (assumed to be the first placeholder)
-		const firstSlide = presentation?.slides?.[0];
-		const titleElement = firstSlide?.pageElements?.find(
-			(element) => element.shape?.shapeType === "TITLE",
-		);
-
-		const titleObjectId = titleElement?.objectId;
-
-		if (titleObjectId && presentation.presentationId) {
-			// Update the title of the first slide
-			await slidesApi.presentations.batchUpdate({
-				presentationId: presentation.presentationId,
-				requestBody: {
-					requests: [
-						{
-							insertText: {
-								objectId: titleObjectId,
-								text: title,
-							},
-						},
-					],
-				},
-			});
-			console.log(`Updated the first slide's title to "${title}".`);
-		} else {
-			console.warn("No title element found in the first slide.");
-		}
-
-		return presentation;
+		return presentation.data as slides_v1.Schema$Presentation; // Ensure type correctness
 	} catch (err) {
-		console.error("Failed to create or update presentation:", err);
+		console.error("Failed to create presentation:", err);
 		throw err;
 	}
 }
 
-// Fetch the details of the first slide in a presentation
-export async function getFirstSlideElements(
+// Update placeholders in the first slide dynamically based on type
+export async function updateFirstSlidePlaceholders(
 	presentationId: string,
-): Promise<slides_v1.Schema$PageElement[] | null> {
+	titleText: string,
+	subtitleText: string,
+): Promise<void> {
 	const auth = await authorize(true);
 	const slidesApi = google.slides({ version: "v1", auth });
 
 	try {
-		// Retrieve the presentation by ID
-		const presentation = await slidesApi.presentations.get({ presentationId });
-		const slides = presentation.data.slides;
+		const slideResponse = await slidesApi.presentations.pages.get({
+			presentationId,
+			pageObjectId: "p", // Assume 'p' refers to the first slide.
+		});
 
-		if (!slides || slides.length === 0) {
-			console.log("No slides found in the presentation.");
-			return null;
+		const slideElements = slideResponse.data.pageElements;
+		if (!slideElements) {
+			throw new Error("No elements found on the first slide.");
 		}
 
-		// Get the first slide
-		const firstSlide = slides[0];
-		const elements = firstSlide.pageElements;
+		// Find the placeholder objects dynamically by type
+		const titlePlaceholder = slideElements.find(
+			(el) => el.shape?.placeholder?.type === "CENTERED_TITLE",
+		);
+		const subtitlePlaceholder = slideElements.find(
+			(el) => el.shape?.placeholder?.type === "SUBTITLE",
+		);
 
-		return elements || null;
+		if (!titlePlaceholder?.objectId || !subtitlePlaceholder?.objectId) {
+			throw new Error("Placeholder IDs for title or subtitle not found.");
+		}
+
+		// Prepare batchUpdate request to update title and subtitle
+		const requests: slides_v1.Schema$Request[] = [
+			{
+				insertText: {
+					objectId: titlePlaceholder.objectId,
+					text: titleText,
+				},
+			},
+			{
+				insertText: {
+					objectId: subtitlePlaceholder.objectId,
+					text: subtitleText,
+				},
+			},
+		];
+
+		await slidesApi.presentations.batchUpdate({
+			presentationId,
+			requestBody: { requests },
+		});
+
+		console.log("Title and subtitle updated dynamically.");
 	} catch (error) {
-		console.error("Error fetching first slide elements:", error);
-		return null;
+		console.error("Failed to update slide text:", error);
+		throw error;
 	}
+}
+
+// Retrieve the full presentation object by ID
+export async function getPresentationById(
+	presentationId: string,
+): Promise<slides_v1.Schema$Presentation> {
+	const auth = await authorize(true);
+	const slidesApi = google.slides({ version: "v1", auth });
+
+	const presentation = await slidesApi.presentations.get({ presentationId });
+	return presentation.data;
+}
+
+// Retrieve the full slide object by presentationId and slideId
+export async function getSlideById(
+	presentationId: string,
+	slideId: string,
+): Promise<slides_v1.Schema$Page> {
+	const auth = await authorize(true);
+	const slidesApi = google.slides({ version: "v1", auth });
+
+	const slide = await slidesApi.presentations.pages.get({
+		presentationId,
+		pageObjectId: slideId,
+	});
+
+	return slide.data;
 }
