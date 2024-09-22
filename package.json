@@ -1,0 +1,19 @@
+{
+  "name": "overengineering-a-slide",
+  "version": "1.0.0",
+  "description": "Automating a simple slide with overengineered code",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node --no-deprecation dist/index.js",
+    "build": "npx tsc"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "googleapis": "^105.0.0",
+    "@google-cloud/local-auth": "^2.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0"
+  }
+}
