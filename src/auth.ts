@@ -158,7 +158,7 @@ export async function authorize(verbose = true): Promise<OAuth2Client> {
 		await checkAndRefreshToken(client, credentials, verbose);
 
 		return client;
-	} catch (err) {
+	} catch (error) {
 		// If no token found, ask for new authorization
 		console.log("No saved credentials found, requesting new authorization...");
 		throw new Error("Authorization required. Please visit the consent URL.");
