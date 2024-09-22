@@ -13,7 +13,9 @@
     "@google-cloud/local-auth": "^2.1.0",
     "@types/express": "^4.17.21",
     "express": "^4.21.0",
-    "googleapis": "^105.0.0"
+    "googleapis": "^105.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "cspell": "^8.14.4",
