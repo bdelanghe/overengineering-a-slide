@@ -112,7 +112,7 @@ export async function saveCredentials(client: OAuth2Client): Promise<void> {
 		type: "authorized_user",
 		client_id: keys.web.client_id,
 		client_secret: keys.web.client_secret,
-		refresh_token: client.credentials?.refresh_token, // Ensure refresh_token is saved
+		refresh_token: client.credentials?.refresh_token || "", // Ensure refresh_token is saved
 		access_token: client.credentials?.access_token,
 		expiry_date: client.credentials?.expiry_date, // Save the expiry date
 	});
@@ -141,8 +141,18 @@ export async function authorize(): Promise<OAuth2Client> {
 	});
 
 	if (client.credentials) {
-		console.log("Authorization successful, saving new credentials...");
-		await saveCredentials(client);
+		// Log credentials to check if refresh_token is returned
+		console.log("Authorization successful, credentials:", client.credentials);
+
+		if (client.credentials.refresh_token) {
+			console.log("Refresh token received.");
+		} else {
+			console.warn(
+				"No refresh token returned. Reauthorization may be required in the future.",
+			);
+		}
+
+		await saveCredentials(client); // Save the credentials with refresh token (if available)
 	} else {
 		console.error("Authorization failed, no credentials returned.");
 	}
