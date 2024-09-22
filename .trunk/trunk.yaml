@@ -23,6 +23,7 @@ lint:
 
 actions:
   enabled:
+    - commitlint
     - npm-check
     - trunk-announce
     - trunk-check-pre-push # Runs checks before pushing code
