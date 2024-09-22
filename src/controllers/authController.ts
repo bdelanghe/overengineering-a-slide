@@ -23,10 +23,10 @@ export const oauthCallback = async (req: Request, res: Response) => {
 	try {
 		await handleAuthCode(code, true);
 		res.send(
-			"Authorization successful! You can create a slide by visiting /create-presentation.",
+			"Authorization successful! You can create a slide by visiting /api/presentation.",
 		);
 	} catch (error) {
 		const errMessage = (error as Error).message;
-		res.status(500).send(`Error generating consent URL: ${errMessage}`);
+		res.status(500).send(`Error handling authorization code: ${errMessage}`);
 	}
 };

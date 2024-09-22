@@ -5,7 +5,7 @@ const router = Router();
 
 /**
  * @swagger
- * /create-presentation:
+ * /api/presentation:
  *   get:
  *     summary: Create a Google Slide presentation
  *     tags: [Slides]
@@ -15,7 +15,7 @@ const router = Router();
  *         schema:
  *           type: string
  *         required: false
- *         description: Title of the presentation (default is "Untitled Presentation")
+ *         description: Title of the presentation (default is 'Untitled Presentation')
  *     responses:
  *       200:
  *         description: Presentation created successfully
@@ -33,6 +33,6 @@ const router = Router();
  *       500:
  *         description: Error creating presentation
  */
-router.get("/create-presentation", createSlide);
+router.get("/api/presentation", createSlide);
 
 export default router;
