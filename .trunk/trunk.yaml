@@ -4,11 +4,13 @@ cli:
 
 runtimes:
   enabled:
+    - go@1.21.0
     - python@3.10.8
     - node@18.12.1
 
 lint:
   enabled:
+    - prettier@3.3.3
     - rome@12.1.3
     - checkov@3.2.255
     - osv-scanner@1.8.5
@@ -17,7 +19,7 @@ lint:
     - markdownlint@0.41.0 # Hermetically installed Markdown linter
     - git-diff-check # Check for uncommitted changes
     - cspell@node # Hermetically installed CSpell for spell checking
-    - gitleaks@7.0.0 # Hermetically installed Gitleaks for detecting secrets in code
+    - gitleaks@8.19.2 # Hermetically installed Gitleaks for detecting secrets in code
 
 actions:
   enabled:
@@ -34,3 +36,6 @@ plugins:
     - id: trunk
       uri: https://github.com/trunk-io/plugins
       ref: v1.6.2
+tools:
+  enabled:
+    - commitizen@4.3.0
