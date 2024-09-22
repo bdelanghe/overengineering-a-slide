@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createSlide } from "../controllers/slideController";
+import { createSlide, getFirstSlide } from "../controllers/slideController";
 
 const router = Router();
 
@@ -47,5 +47,41 @@ const router = Router();
  *         description: Error creating or fetching presentation
  */
 router.get("/api/presentation", createSlide);
+
+/**
+ * @swagger
+ * /api/presentation/{presentationId}/first-slide:
+ *   get:
+ *     summary: Get the elements of the first slide in a presentation
+ *     tags: [Slides]
+ *     parameters:
+ *       - in: path
+ *         name: presentationId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the presentation
+ *     responses:
+ *       200:
+ *         description: First slide elements retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "First slide elements retrieved successfully."
+ *                 elements:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     description: Slide element properties
+ *       400:
+ *         description: No presentation ID provided
+ *       500:
+ *         description: Error retrieving first slide elements
+ */
+router.get("/api/presentation/:presentationId/first-slide", getFirstSlide);
 
 export default router;
