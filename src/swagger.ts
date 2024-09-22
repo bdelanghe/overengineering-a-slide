@@ -20,5 +20,25 @@ const options = {
 const swaggerSpec = swaggerJsDoc(options);
 
 export const setupSwaggerDocs = (app: Express) => {
-	app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+	// Serve Swagger UI
+	app.use(
+		"/api-docs",
+		swaggerUi.serve,
+		swaggerUi.setup(swaggerSpec, {
+			swaggerOptions: {
+				urls: [
+					{
+						url: "/api-docs.json",
+						name: "OpenAPI Spec",
+					},
+				],
+			},
+		}),
+	);
+
+	// Serve the OpenAPI spec as JSON for download
+	app.get("/api-docs.json", (req, res) => {
+		res.setHeader("Content-Type", "application/json");
+		res.send(swaggerSpec);
+	});
 };
