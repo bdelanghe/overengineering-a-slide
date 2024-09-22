@@ -144,9 +144,7 @@ async function saveCredentials(
 /**
  * Authorize the client, loading saved credentials or requesting new authorization.
  */
-export async function authorize(
-	verbose: boolean = true,
-): Promise<OAuth2Client> {
+export async function authorize(verbose = true): Promise<OAuth2Client> {
 	try {
 		// Check if token already exists
 		const credentials = JSON.parse(
