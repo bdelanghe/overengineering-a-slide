@@ -18,6 +18,19 @@ const router = Router();
  *         description: Title of the presentation (default is 'Untitled Presentation')
  *     responses:
  *       200:
+ *         description: Presentation already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Presentation already exists!"
+ *                 url:
+ *                   type: string
+ *                   example: "https://docs.google.com/presentation/d/{presentationId}/edit"
+ *       201:
  *         description: Presentation created successfully
  *         content:
  *           application/json:
@@ -31,7 +44,7 @@ const router = Router();
  *                   type: string
  *                   example: "https://docs.google.com/presentation/d/{presentationId}/edit"
  *       500:
- *         description: Error creating presentation
+ *         description: Error creating or fetching presentation
  */
 router.get("/api/presentation", createSlide);
 
