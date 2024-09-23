@@ -22,22 +22,41 @@ const router = Router({ mergeParams: true }); // Enable merging parent route par
  *         schema:
  *           type: string
  *         required: true
- *         description: ID of the presentation to search pages for
+ *         description: ID of the presentation
  *       - in: query
  *         name: index
  *         schema:
  *           type: number
  *         required: false
  *         description: The index of the page to retrieve (optional)
+ *       - in: query
+ *         name: layoutObjectId
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The layoutObjectId to filter pages by (optional)
+ *       - in: query
+ *         name: masterObjectId
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The masterObjectId to filter pages by (optional)
+ *       - in: query
+ *         name: pageType
+ *         schema:
+ *           type: string
+ *           enum: [SLIDE, MASTER, LAYOUT, NOTES]
+ *         required: false
+ *         description: The inferred page type to filter by (default is SLIDE)
  *     responses:
  *       200:
- *         description: List of pages or a single page if index is provided
+ *         description: List of pages or a specific page if index is provided
  *       404:
  *         description: Page not found
  *       500:
  *         description: Error retrieving pages
  */
-router.get("/", searchPages); // Handles list and search by index
+router.get("/", searchPages);
 
 /**
  * @swagger

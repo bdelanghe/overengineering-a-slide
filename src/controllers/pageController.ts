@@ -42,7 +42,7 @@ export const getPageById = async (req: Request, res: Response) => {
 // Search pages (slides) by index or retrieve all pages
 export const searchPages = async (req: Request, res: Response) => {
 	const { presentationId } = req.params;
-	const { index } = req.query;
+	const { index, layoutObjectId, masterObjectId, pageType } = req.query;
 
 	try {
 		// Check if presentationId exists
@@ -68,8 +68,14 @@ export const searchPages = async (req: Request, res: Response) => {
 			return res.status(200).json(page);
 		}
 
-		// If no index is provided, return all pages
-		const pages = await searchPagesService(presentationId);
+		// If no index is provided, filter pages by layoutObjectId, masterObjectId, and pageType
+		const pages = await searchPagesService(
+			presentationId,
+			layoutObjectId as string | undefined,
+			masterObjectId as string | undefined,
+			(pageType as string) || "SLIDE", // Default to 'SLIDE' if pageType is not provided
+		);
+
 		return res.status(200).json(pages);
 	} catch (error) {
 		const errMessage = (error as Error).message;

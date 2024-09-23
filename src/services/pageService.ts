@@ -53,6 +53,9 @@ export const getPageByIndexService = async (
 // Search pages (slides) by index or placeholder
 export const searchPagesService = async (
 	presentationId: string,
+	layoutObjectId?: string,
+	masterObjectId?: string,
+	pageType = "SLIDE", // Default to 'SLIDE'
 ): Promise<slides_v1.Schema$Page[]> => {
 	const auth = await authorize(true); // Assuming authorization service
 	const slidesApi = google.slides({ version: "v1", auth });
@@ -63,9 +66,39 @@ export const searchPagesService = async (
 		});
 
 		const pages = response.data.slides || [];
-		return pages;
+
+		// Helper function to infer the page type based on specific properties
+		const getPageType = (page: slides_v1.Schema$Page): string => {
+			if (page?.notesProperties) {
+				return "NOTES";
+			}
+			if (page?.layoutProperties) {
+				return "LAYOUT";
+			}
+			if (page?.masterProperties) {
+				return "MASTER";
+			}
+			if (page?.slideProperties) {
+				return "SLIDE";
+			}
+			return "SLIDE"; // Default to SLIDE if no specific properties exist
+		};
+
+		// Filter pages based on layoutObjectId, masterObjectId, and inferred pageType
+		return pages.filter((page) => {
+			const layoutMatch =
+				!layoutObjectId ||
+				page?.slideProperties?.layoutObjectId === layoutObjectId;
+			const masterMatch =
+				!masterObjectId ||
+				page?.slideProperties?.masterObjectId === masterObjectId;
+			const inferredPageType = getPageType(page);
+			const typeMatch = inferredPageType === pageType;
+
+			return layoutMatch && masterMatch && typeMatch;
+		});
 	} catch (error) {
-		console.error(`Error searching pages: ${error}`);
+		console.error(`Error retrieving pages: ${error}`);
 		throw error;
 	}
 };
