@@ -1,17 +1,30 @@
 import { Request, Response } from "express";
 import {
 	getPageByIdService,
+	getPageByIndexService,
 	searchPagesService,
 	createPageService,
 	updatePageByIdService,
 	deletePageService,
-} from "../services/pageService"; // Assume you'll have corresponding services for these methods
+} from "../services/pageService";
 
-// Get a page (slide) by its ID
+// Get a page (slide) by its ID or index
 export const getPageById = async (req: Request, res: Response) => {
 	const { presentationId, pageId } = req.params;
 
 	try {
+		// If pageId is a number, assume it's an index and use the new service method
+		const pageIndex = parseInt(pageId, 10); // Convert pageId to a number
+		if (!isNaN(pageIndex)) {
+			const page = await getPageByIndexService(presentationId, pageIndex); // Use the index service
+			if (page) {
+				return res.status(200).json(page);
+			} else {
+				return res.status(404).json({ message: "Page not found" });
+			}
+		}
+
+		// If pageId is not a number, use getPageByIdService
 		const page = await getPageByIdService(presentationId, pageId);
 		if (page) {
 			return res.status(200).json(page);
@@ -48,10 +61,7 @@ export const searchPages = async (req: Request, res: Response) => {
 					.json({ message: "Index must be a valid number" });
 			}
 
-			const page = await getPageByIdService(
-				presentationId,
-				pageIndex.toString(),
-			);
+			const page = await getPageByIndexService(presentationId, pageIndex); // Use the index service
 			if (!page) {
 				return res.status(404).json({ message: "Page not found" });
 			}

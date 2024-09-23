@@ -1,4 +1,5 @@
 import { google, slides_v1 } from "googleapis";
+import { v4 as uuidv4 } from "uuid"; // Import a UUID generator
 import { authorize } from "./authService"; // Assume this is the authorization service
 
 // Get a page (slide) by its ID
@@ -12,12 +13,39 @@ export const getPageByIdService = async (
 	try {
 		const response = await slidesApi.presentations.pages.get({
 			presentationId,
-			pageObjectId: pageId,
+			pageObjectId: pageId, // Use pageId as a string
 		});
 
 		return response.data || null;
 	} catch (error) {
 		console.error(`Error fetching page by ID: ${error}`);
+		throw error;
+	}
+};
+
+// Get a page (slide) by index
+export const getPageByIndexService = async (
+	presentationId: string,
+	index: number,
+): Promise<slides_v1.Schema$Page | null> => {
+	const auth = await authorize(true); // Assuming authorization service
+	const slidesApi = google.slides({ version: "v1", auth });
+
+	try {
+		const response = await slidesApi.presentations.get({
+			presentationId,
+		});
+
+		const pages = response.data.slides || [];
+
+		// Return the page at the specified index, if it exists
+		if (index >= 0 && index < pages.length) {
+			return pages[index] || null;
+		}
+
+		return null; // Index out of range
+	} catch (error) {
+		console.error(`Error fetching page by index: ${error}`);
 		throw error;
 	}
 };
@@ -52,19 +80,22 @@ export const createPageService = async (
 	const slidesApi = google.slides({ version: "v1", auth });
 
 	try {
+		// Generate a unique object ID for the slide using uuidv4
+		const slideObjectId = `slide_${uuidv4()}`;
+
 		const response = await slidesApi.presentations.batchUpdate({
 			presentationId,
 			requestBody: {
 				requests: [
 					{
 						createSlide: {
-							objectId: `slide_${index}`, // You can create a custom object ID
+							objectId: slideObjectId, // Use the unique object ID
 							insertionIndex: index,
 						},
 					},
 					{
 						insertText: {
-							objectId: `slide_${index}`,
+							objectId: slideObjectId,
 							text: title,
 							insertionIndex: 0, // Insert at the beginning of the text box
 						},
@@ -91,21 +122,25 @@ export const updatePageByIdService = async (
 	const slidesApi = google.slides({ version: "v1", auth });
 
 	try {
+		// Instead of `insertText`, you can update text in a shape using `replaceAllText`
 		await slidesApi.presentations.batchUpdate({
 			presentationId,
 			requestBody: {
 				requests: [
 					{
-						insertText: {
-							objectId: pageId,
-							text: title,
-							insertionIndex: 0,
+						replaceAllText: {
+							containsText: {
+								text: "{{PAGE_TITLE}}", // Assuming there's a placeholder for the title
+								matchCase: true,
+							},
+							replaceText: title,
 						},
 					},
 				],
 			},
 		});
 
+		// Retrieve the updated page
 		return await getPageByIdService(presentationId, pageId);
 	} catch (error) {
 		console.error(`Error updating page: ${error}`);
@@ -128,7 +163,7 @@ export const deletePageService = async (
 				requests: [
 					{
 						deleteObject: {
-							objectId: pageId,
+							objectId: pageId, // Ensure pageId is the correct slide object ID
 						},
 					},
 				],
