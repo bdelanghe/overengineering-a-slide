@@ -120,7 +120,7 @@ export const updatePageElementByIdService = async (
 
 	const requests: slides_v1.Schema$Request[] = [
 		{
-			insertText: {
+			replaceAllText: {
 				objectId: elementId,
 				text,
 			},

@@ -15,7 +15,7 @@ const router = Router();
  *       500:
  *         description: Error generating consent URL
  */
-router.get("/auth/consent", auth);
+router.get("/consent", auth);
 
 /**
  * @swagger
@@ -38,29 +38,6 @@ router.get("/auth/consent", auth);
  *       500:
  *         description: Error handling authorization code
  */
-router.get("/auth/callback", oauthCallback);
-
-/**
- * @swagger
- * /auth/callback:
- *   get:
- *     summary: Handle OAuth2 callback and process authorization code
- *     tags: [Auth]
- *     parameters:
- *       - in: query
- *         name: code
- *         schema:
- *           type: string
- *         required: true
- *         description: Authorization code returned from Google OAuth2
- *     responses:
- *       200:
- *         description: Authorization successful
- *       400:
- *         description: Authorization code missing
- *       500:
- *         description: Error handling authorization code
- */
-router.get("/oauth2callback", oauthCallback);
+router.get("/callback", oauthCallback);
 
 export default router;
