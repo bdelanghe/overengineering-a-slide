@@ -2,7 +2,8 @@ import { Router } from "express";
 import {
 	getPresentation,
 	createPresentation,
-	updatePresentation,
+	updatePresentationById,
+	upsertPresentation,
 	deletePresentation,
 	searchPresentations,
 } from "../controllers/presentationController";
@@ -21,25 +22,14 @@ const router = Router();
  *         schema:
  *           type: string
  *         required: false
- *         description: Search presentations by title
+ *         description: Search for presentations by title
  *     responses:
  *       200:
  *         description: List of presentations
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   title:
- *                     type: string
  *       500:
  *         description: Error searching presentations
  */
-router.get("/api/presentations", searchPresentations);
+router.get("/", searchPresentations);
 
 /**
  * @swagger
@@ -53,25 +43,16 @@ router.get("/api/presentations", searchPresentations);
  *         schema:
  *           type: string
  *         required: true
- *         description: ID of the presentation
+ *         description: ID of the presentation to retrieve
  *     responses:
  *       200:
  *         description: Presentation retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 title:
- *                   type: string
  *       404:
  *         description: Presentation not found
  *       500:
  *         description: Error retrieving presentation
  */
-router.get("/api/presentations/:presentationId", getPresentation);
+router.get("/:presentationId", getPresentation);
 
 /**
  * @swagger
@@ -93,27 +74,44 @@ router.get("/api/presentations/:presentationId", getPresentation);
  *     responses:
  *       201:
  *         description: Presentation created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 title:
- *                   type: string
- *       400:
- *         description: Invalid request, title is missing
  *       500:
  *         description: Error creating presentation
  */
-router.post("/api/presentations", createPresentation);
+router.post("/", createPresentation);
+
+/**
+ * @swagger
+ * /api/presentations:
+ *   put:
+ *     summary: Upsert a presentation by title
+ *     tags: [Presentations]
+ *     requestBody:
+ *       description: Presentation details to upsert
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "Existing Presentation"
+ *               newTitle:
+ *                 type: string
+ *                 example: "Updated Presentation Title"
+ *     responses:
+ *       200:
+ *         description: Presentation upserted successfully
+ *       500:
+ *         description: Error upserting presentation
+ */
+router.put("/", upsertPresentation);
 
 /**
  * @swagger
  * /api/presentations/{presentationId}:
  *   put:
- *     summary: Update a presentation by title
+ *     summary: Update a presentation by ID
  *     tags: [Presentations]
  *     parameters:
  *       - in: path
@@ -136,21 +134,12 @@ router.post("/api/presentations", createPresentation);
  *     responses:
  *       200:
  *         description: Presentation updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 title:
- *                   type: string
  *       404:
  *         description: Presentation not found
  *       500:
  *         description: Error updating presentation
  */
-router.put("/api/presentations/:presentationId", updatePresentation);
+router.put("/:presentationId", updatePresentationById);
 
 /**
  * @swagger
@@ -168,19 +157,11 @@ router.put("/api/presentations/:presentationId", updatePresentation);
  *     responses:
  *       200:
  *         description: Presentation deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Presentation deleted successfully"
  *       404:
  *         description: Presentation not found
  *       500:
  *         description: Error deleting presentation
  */
-router.delete("/api/presentations/:presentationId", deletePresentation);
+router.delete("/:presentationId", deletePresentation);
 
 export default router;

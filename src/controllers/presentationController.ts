@@ -1,13 +1,16 @@
 import { Request, Response } from "express";
 import {
-	createPresentation as createPresentationService,
 	getPresentationById,
-	searchPresentationsByTitle,
-	updatePresentationTitle,
+	createNewPresentation,
+	updatePresentation,
 	deletePresentationById,
+	searchPresentationsByTitle,
+	upsertPresentationByTitle,
 } from "../services/presentationService";
 
-// Get a presentation by its ID
+/**
+ * Get a presentation by its ID
+ */
 export const getPresentation = async (req: Request, res: Response) => {
 	const { presentationId } = req.params;
 
@@ -16,67 +19,72 @@ export const getPresentation = async (req: Request, res: Response) => {
 		if (!presentation) {
 			return res.status(404).json({ message: "Presentation not found" });
 		}
-		res.status(200).json(presentation);
+		return res.status(200).json(presentation);
 	} catch (error) {
-		res.status(500).json({ message: "Error retrieving presentation", error });
+		return res
+			.status(500)
+			.json({ message: "Error retrieving presentation", error });
 	}
 };
 
-// Search for presentations by title
-export const searchPresentations = async (req: Request, res: Response) => {
-	const { title } = req.query;
-
-	try {
-		const presentations = await searchPresentationsByTitle(title as string);
-		res.status(200).json(presentations);
-	} catch (error) {
-		res.status(500).json({ message: "Error searching presentations", error });
-	}
-};
-
-// Create a new presentation
+/**
+ * Create a new presentation
+ */
 export const createPresentation = async (req: Request, res: Response) => {
 	const { title } = req.body;
 
-	if (!title) {
-		return res.status(400).json({ message: "Title is required" });
-	}
-
 	try {
-		const presentation = await createPresentationService(title);
-		res.status(201).json(presentation);
+		const newPresentation = await createNewPresentation(title);
+		return res.status(201).json(newPresentation);
 	} catch (error) {
-		res.status(500).json({ message: "Error creating presentation", error });
+		return res
+			.status(500)
+			.json({ message: "Error creating presentation", error });
 	}
 };
 
-// Update a presentation by its title
-export const updatePresentation = async (req: Request, res: Response) => {
+/**
+ * Update a presentation by ID
+ */
+export const updatePresentationById = async (req: Request, res: Response) => {
 	const { presentationId } = req.params;
 	const { title } = req.body;
 
-	if (!title) {
-		return res.status(400).json({ message: "Title is required" });
-	}
-
 	try {
-		const updatedPresentation = await updatePresentationTitle(
-			presentationId,
-			title,
-		);
+		const updatedPresentation = await updatePresentation(presentationId, title);
 		if (!updatedPresentation) {
 			return res.status(404).json({ message: "Presentation not found" });
 		}
-		res.status(200).json({
-			message: "Presentation updated successfully",
-			presentation: updatedPresentation,
-		});
+		return res.status(200).json(updatedPresentation);
 	} catch (error) {
-		res.status(500).json({ message: "Error updating presentation", error });
+		return res
+			.status(500)
+			.json({ message: "Error updating presentation", error });
 	}
 };
 
-// Delete a presentation by its ID
+/**
+ * Upsert a presentation by title
+ */
+export const upsertPresentation = async (req: Request, res: Response) => {
+	const { title, newTitle } = req.body;
+
+	try {
+		const upsertedPresentation = await upsertPresentationByTitle(
+			title,
+			newTitle,
+		);
+		return res.status(200).json(upsertedPresentation);
+	} catch (error) {
+		return res
+			.status(500)
+			.json({ message: "Error upserting presentation", error });
+	}
+};
+
+/**
+ * Delete a presentation by ID
+ */
 export const deletePresentation = async (req: Request, res: Response) => {
 	const { presentationId } = req.params;
 
@@ -85,8 +93,28 @@ export const deletePresentation = async (req: Request, res: Response) => {
 		if (!deleted) {
 			return res.status(404).json({ message: "Presentation not found" });
 		}
-		res.status(200).json({ message: "Presentation deleted successfully" });
+		return res
+			.status(200)
+			.json({ message: "Presentation deleted successfully" });
 	} catch (error) {
-		res.status(500).json({ message: "Error deleting presentation", error });
+		return res
+			.status(500)
+			.json({ message: "Error deleting presentation", error });
+	}
+};
+
+/**
+ * Search presentations by title
+ */
+export const searchPresentations = async (req: Request, res: Response) => {
+	const { title } = req.query;
+
+	try {
+		const presentations = await searchPresentationsByTitle(title as string);
+		return res.status(200).json(presentations);
+	} catch (error) {
+		return res
+			.status(500)
+			.json({ message: "Error searching presentations", error });
 	}
 };
