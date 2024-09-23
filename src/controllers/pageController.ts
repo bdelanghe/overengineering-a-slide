@@ -26,19 +26,46 @@ export const getPageById = async (req: Request, res: Response) => {
 	}
 };
 
-// Search pages (slides) by index or placeholder
+// Search pages (slides) by index or retrieve all pages
 export const searchPages = async (req: Request, res: Response) => {
 	const { presentationId } = req.params;
 	const { index } = req.query;
 
 	try {
-		const pages = await searchPagesService(presentationId, Number(index));
+		// Check if presentationId exists
+		if (!presentationId) {
+			return res
+				.status(400)
+				.json({ message: "Missing required parameters: presentationId" });
+		}
+
+		// If an index is provided, retrieve the specific page by index
+		if (index !== undefined) {
+			const pageIndex = parseInt(index as string, 10); // Ensure index is parsed as a number
+			if (isNaN(pageIndex)) {
+				return res
+					.status(400)
+					.json({ message: "Index must be a valid number" });
+			}
+
+			const page = await getPageByIdService(
+				presentationId,
+				pageIndex.toString(),
+			);
+			if (!page) {
+				return res.status(404).json({ message: "Page not found" });
+			}
+			return res.status(200).json(page);
+		}
+
+		// If no index is provided, return all pages
+		const pages = await searchPagesService(presentationId);
 		return res.status(200).json(pages);
 	} catch (error) {
 		const errMessage = (error as Error).message;
 		return res
 			.status(500)
-			.json({ message: `Error searching pages: ${errMessage}` });
+			.json({ message: `Error retrieving pages: ${errMessage}` });
 	}
 };
 

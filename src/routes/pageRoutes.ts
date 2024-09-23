@@ -5,15 +5,15 @@ import {
 	createPage,
 	updatePageById,
 	deletePage,
-} from "../controllers/pageController"; // You will create these in your controller
+} from "../controllers/pageController";
 
-const router = Router();
+const router = Router({ mergeParams: true }); // Enable merging parent route parameters
 
 /**
  * @swagger
  * /api/presentations/{presentationId}/pages:
  *   get:
- *     summary: Search pages (slides) within a presentation by index
+ *     summary: Get a list of pages (slides) in the presentation or get a specific page by index
  *     tags: [Pages]
  *     parameters:
  *       - in: path
@@ -27,14 +27,16 @@ const router = Router();
  *         schema:
  *           type: number
  *         required: false
- *         description: Search for pages by index within the presentation
+ *         description: The index of the page to retrieve (optional)
  *     responses:
  *       200:
- *         description: List of pages
+ *         description: List of pages or a single page if index is provided
+ *       404:
+ *         description: Page not found
  *       500:
- *         description: Error searching pages
+ *         description: Error retrieving pages
  */
-router.get("/:presentationId/pages", searchPages);
+router.get("/", searchPages); // Handles list and search by index
 
 /**
  * @swagger
@@ -63,7 +65,7 @@ router.get("/:presentationId/pages", searchPages);
  *       500:
  *         description: Error retrieving page
  */
-router.get("/:presentationId/pages/:pageId", getPageById);
+router.get("/:pageId", getPageById);
 
 /**
  * @swagger
@@ -71,6 +73,13 @@ router.get("/:presentationId/pages/:pageId", getPageById);
  *   post:
  *     summary: Create a new page (slide) in the presentation
  *     tags: [Pages]
+ *     parameters:
+ *       - in: path
+ *         name: presentationId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the presentation
  *     requestBody:
  *       description: Page details to create
  *       required: true
@@ -79,19 +88,19 @@ router.get("/:presentationId/pages/:pageId", getPageById);
  *           schema:
  *             type: object
  *             properties:
- *               index:
- *                 type: number
- *                 example: 1
  *               title:
  *                 type: string
  *                 example: "Slide Title"
+ *               index:
+ *                 type: number
+ *                 example: 1
  *     responses:
  *       201:
  *         description: Page created successfully
  *       500:
  *         description: Error creating page
  */
-router.post("/:presentationId/pages", createPage);
+router.post("/", createPage);
 
 /**
  * @swagger
@@ -131,7 +140,7 @@ router.post("/:presentationId/pages", createPage);
  *       500:
  *         description: Error updating page
  */
-router.put("/:presentationId/pages/:pageId", updatePageById);
+router.put("/:pageId", updatePageById);
 
 /**
  * @swagger
@@ -160,6 +169,6 @@ router.put("/:presentationId/pages/:pageId", updatePageById);
  *       500:
  *         description: Error deleting page
  */
-router.delete("/:presentationId/pages/:pageId", deletePage);
+router.delete("/:pageId", deletePage);
 
 export default router;

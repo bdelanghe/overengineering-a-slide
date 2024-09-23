@@ -25,8 +25,7 @@ export const getPageByIdService = async (
 // Search pages (slides) by index or placeholder
 export const searchPagesService = async (
 	presentationId: string,
-	index?: number,
-): Promise<slides_v1.Schema$Page[] | null> => {
+): Promise<slides_v1.Schema$Page[]> => {
 	const auth = await authorize(true); // Assuming authorization service
 	const slidesApi = google.slides({ version: "v1", auth });
 
@@ -36,12 +35,6 @@ export const searchPagesService = async (
 		});
 
 		const pages = response.data.slides || [];
-
-		// If an index is provided, return that specific slide, else return all slides
-		if (index !== undefined) {
-			return [pages[index]] || null;
-		}
-
 		return pages;
 	} catch (error) {
 		console.error(`Error searching pages: ${error}`);

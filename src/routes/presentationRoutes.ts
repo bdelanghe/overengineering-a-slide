@@ -7,6 +7,7 @@ import {
 	deletePresentation,
 	searchPresentations,
 } from "../controllers/presentationController";
+import pageRoutes from "./pageRoutes"; // Import page (slide) routes to nest them under presentations
 
 const router = Router();
 
@@ -163,5 +164,10 @@ router.put("/:presentationId", updatePresentationById);
  *         description: Error deleting presentation
  */
 router.delete("/:presentationId", deletePresentation);
+
+/**
+ * Register page-related routes nested under presentations
+ */
+router.use("/:presentationId/pages", pageRoutes); // All page (slide) routes scoped under a presentation
 
 export default router;

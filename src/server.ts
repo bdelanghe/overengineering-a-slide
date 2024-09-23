@@ -2,23 +2,23 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import presentationRoutes from "./routes/presentationRoutes"; // Presentation routes
-import pageRoutes from "./routes/pageRoutes"; // Add page (slide) routes
+import pageRoutes from "./routes/pageRoutes"; // Page routes
 import { setupSwaggerDocs } from "./swagger";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware for parsing JSON and URL-encoded data
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Enable CORS
 app.use(cors());
 
 // Register routes
-app.use("/auth", authRoutes); // Route for authentication-related routes
-app.use("/api/presentations", presentationRoutes); // Route for presentation-related routes
-app.use("/api/pages", pageRoutes); // Route for page (slide) related routes
+app.use("/auth", authRoutes);
+app.use("/api/presentations", presentationRoutes);
+
+// Nested route for pages under presentations
+app.use("/api/presentations/:presentationId/pages", pageRoutes); // presentationId gets passed here
 
 // Setup Swagger documentation
 setupSwaggerDocs(app);
