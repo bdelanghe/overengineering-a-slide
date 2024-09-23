@@ -114,6 +114,23 @@ router.get("/:pageId", getPageById);
  *               index:
  *                 type: number
  *                 example: 1
+ *               predefined_layout:
+ *                 type: string
+ *                 description: Predefined layout for the slide (optional)
+ *                 enum:
+ *                   - PREDEFINED_LAYOUT_UNSPECIFIED
+ *                   - BLANK
+ *                   - CAPTION_ONLY
+ *                   - TITLE
+ *                   - TITLE_AND_BODY
+ *                   - TITLE_AND_TWO_COLUMNS
+ *                   - TITLE_ONLY
+ *                   - SECTION_HEADER
+ *                   - SECTION_TITLE_AND_DESCRIPTION
+ *                   - ONE_COLUMN_TEXT
+ *                   - MAIN_POINT
+ *                   - BIG_NUMBER
+ *                 example: TITLE_AND_BODY
  *     responses:
  *       201:
  *         description: Page created successfully

@@ -88,10 +88,16 @@ export const searchPages = async (req: Request, res: Response) => {
 // Create a new page (slide) in the presentation
 export const createPage = async (req: Request, res: Response) => {
 	const { presentationId } = req.params;
-	const { title, index } = req.body;
+	const { title, index, predefined_layout } = req.body; // Accept predefined_layout
 
 	try {
-		const newPage = await createPageService(presentationId, title, index);
+		// Pass the predefined_layout to the service if provided
+		const newPage = await createPageService(
+			presentationId,
+			title,
+			index,
+			predefined_layout,
+		);
 		return res.status(201).json({
 			message: "Page created successfully",
 			page: newPage,

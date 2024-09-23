@@ -23,6 +23,51 @@ export const getPageByIdService = async (
 	}
 };
 
+// Create a new page (slide) in the presentation
+export const createPageService = async (
+	presentationId: string,
+	title: string,
+	index: number,
+	predefined_layout?: string, // Optional predefined layout
+): Promise<slides_v1.Schema$Response[] | undefined> => {
+	const auth = await authorize(true); // Assuming authorization service
+	const slidesApi = google.slides({ version: "v1", auth });
+
+	try {
+		const createSlideRequest: slides_v1.Schema$CreateSlideRequest = {
+			objectId: `slide_${uuidv4()}`,
+			insertionIndex: index,
+		};
+
+		// Add the predefined layout if it was provided
+		if (predefined_layout) {
+			createSlideRequest.slideLayoutReference = {
+				predefinedLayout: predefined_layout,
+			};
+		}
+
+		// Prepare the batchUpdate request
+		const requests: slides_v1.Schema$Request[] = [
+			{
+				createSlide: createSlideRequest,
+			},
+		];
+
+		// Make the API call
+		const response = await slidesApi.presentations.batchUpdate({
+			presentationId,
+			requestBody: {
+				requests,
+			},
+		});
+
+		return response.data.replies;
+	} catch (error) {
+		console.error(`Error creating page: ${error}`);
+		throw error;
+	}
+};
+
 // Get a page (slide) by index
 export const getPageByIndexService = async (
 	presentationId: string,
@@ -67,7 +112,6 @@ export const searchPagesService = async (
 
 		const pages = response.data.slides || [];
 
-		// Helper function to infer the page type based on specific properties
 		const getPageType = (page: slides_v1.Schema$Page): string => {
 			if (page?.notesProperties) {
 				return "NOTES";
@@ -103,72 +147,6 @@ export const searchPagesService = async (
 	}
 };
 
-// Create a new page (slide) in the presentation
-export const createPageService = async (
-	presentationId: string,
-	title: string,
-	index: number,
-): Promise<slides_v1.Schema$Page> => {
-	const auth = await authorize(true); // Assuming authorization service
-	const slidesApi = google.slides({ version: "v1", auth });
-
-	// Generate a unique ID for the slide and text box
-	const slideId = `slide_${uuidv4()}`;
-	const textBoxId = `text_box_${uuidv4()}`;
-
-	try {
-		// Step 1: Create a new slide
-		const response = await slidesApi.presentations.batchUpdate({
-			presentationId,
-			requestBody: {
-				requests: [
-					{
-						createSlide: {
-							objectId: slideId,
-							insertionIndex: index,
-						},
-					},
-					// Step 2: Create a text box on the newly created slide
-					{
-						createShape: {
-							objectId: textBoxId,
-							shapeType: "TEXT_BOX",
-							elementProperties: {
-								pageObjectId: slideId, // The slide we just created
-								size: {
-									width: { magnitude: 3000000, unit: "EMU" },
-									height: { magnitude: 3000000, unit: "EMU" },
-								},
-								transform: {
-									scaleX: 1,
-									scaleY: 1,
-									translateX: 100000,
-									translateY: 100000,
-									unit: "EMU",
-								},
-							},
-						},
-					},
-					// Step 3: Insert text into the created text box
-					{
-						insertText: {
-							objectId: textBoxId,
-							text: title,
-							insertionIndex: 0,
-						},
-					},
-				],
-			},
-		});
-
-		const createdSlide = response.data.replies?.[0].createSlide?.objectId;
-		return { objectId: createdSlide || null } as slides_v1.Schema$Page; // Return the created page object
-	} catch (error) {
-		console.error(`Error creating page: ${error}`);
-		throw error;
-	}
-};
-
 // Update a page (slide) by ID
 export const updatePageByIdService = async (
 	presentationId: string,
@@ -179,7 +157,6 @@ export const updatePageByIdService = async (
 	const slidesApi = google.slides({ version: "v1", auth });
 
 	try {
-		// Instead of `insertText`, you can update text in a shape using `replaceAllText`
 		await slidesApi.presentations.batchUpdate({
 			presentationId,
 			requestBody: {
@@ -197,8 +174,7 @@ export const updatePageByIdService = async (
 			},
 		});
 
-		// Retrieve the updated page
-		return await getPageByIdService(presentationId, pageId);
+		return await getPageByIndexService(presentationId, parseInt(pageId)); // Assuming pageId is an index here
 	} catch (error) {
 		console.error(`Error updating page: ${error}`);
 		throw error;
