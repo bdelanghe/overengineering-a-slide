@@ -22,8 +22,8 @@ lint:
 
 actions:
   enabled:
-    - commitizen
-    - commitlint
+    # - commitizen
+    # - commitlint
     - npm-check
     - trunk-announce
     - trunk-check-pre-push # Runs checks before pushing code
