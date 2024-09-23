@@ -6,6 +6,7 @@ import {
 	updatePageById,
 	deletePage,
 } from "../controllers/pageController";
+import pageElementRoutes from "./pageElementRoutes"; // Import page element routes
 
 const router = Router({ mergeParams: true }); // Enable merging parent route parameters
 
@@ -170,5 +171,7 @@ router.put("/:pageId", updatePageById);
  *         description: Error deleting page
  */
 router.delete("/:pageId", deletePage);
+
+router.use("/:pageId/elements", pageElementRoutes); // Nested route for elements under pages
 
 export default router;
