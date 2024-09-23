@@ -34,6 +34,18 @@ const router = Router({ mergeParams: true }); // Enable merging parent route par
  *           type: number
  *         required: false
  *         description: The index of the element to retrieve (optional)
+ *       - in: query
+ *         name: placeholderType
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The placeholder type of the element (optional)
+ *       - in: query
+ *         name: shapeType
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The shape type of the element (optional)
  *     responses:
  *       200:
  *         description: List of elements or a specific element if index is provided

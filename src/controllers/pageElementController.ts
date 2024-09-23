@@ -10,36 +10,51 @@ import {
 // Get a list of elements or a specific element by index
 export const searchPageElements = async (req: Request, res: Response) => {
 	const { presentationId, pageId } = req.params;
-	const { index } = req.query;
+	const { index, placeholderType, shapeType } = req.query;
 
 	try {
 		if (!presentationId || !pageId) {
 			return res.status(400).json({ message: "Missing required parameters" });
 		}
 
-		// If index is provided, return the specific element
+		// If index is provided, return the specific element by index
 		if (index !== undefined) {
-			const elementIndex = parseInt(index as string, 10); // Convert index to number
+			const elementIndex = parseInt(index as string, 10);
 			if (isNaN(elementIndex)) {
 				return res
 					.status(400)
 					.json({ message: "Index must be a valid number" });
 			}
 
-			// Convert elementIndex to a string if needed by the service
 			const element = await getPageElementByIdService(
 				presentationId,
 				pageId,
-				elementIndex.toString(), // Ensure it's passed as a string
+				elementIndex.toString(),
 			);
+
 			if (!element) {
 				return res.status(404).json({ message: "Element not found" });
 			}
 			return res.status(200).json(element);
 		}
 
-		// Otherwise, return all elements on the page
-		const elements = await searchPageElementsService(presentationId, pageId);
+		// Retrieve all elements
+		let elements = await searchPageElementsService(presentationId, pageId);
+
+		// Filter by placeholder type if provided
+		if (placeholderType) {
+			elements = elements.filter(
+				(element) => element.shape?.placeholder?.type === placeholderType,
+			);
+		}
+
+		// Filter by shapeType if provided
+		if (shapeType) {
+			elements = elements.filter(
+				(element) => element.shape?.shapeType === shapeType,
+			);
+		}
+
 		return res.status(200).json(elements);
 	} catch (error) {
 		const errMessage = (error as Error).message;
