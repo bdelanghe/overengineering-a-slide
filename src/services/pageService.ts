@@ -79,25 +79,49 @@ export const createPageService = async (
 	const auth = await authorize(true); // Assuming authorization service
 	const slidesApi = google.slides({ version: "v1", auth });
 
-	try {
-		// Generate a unique object ID for the slide using uuidv4
-		const slideObjectId = `slide_${uuidv4()}`;
+	// Generate a unique ID for the slide and text box
+	const slideId = `slide_${uuidv4()}`;
+	const textBoxId = `text_box_${uuidv4()}`;
 
+	try {
+		// Step 1: Create a new slide
 		const response = await slidesApi.presentations.batchUpdate({
 			presentationId,
 			requestBody: {
 				requests: [
 					{
 						createSlide: {
-							objectId: slideObjectId, // Use the unique object ID
+							objectId: slideId,
 							insertionIndex: index,
 						},
 					},
+					// Step 2: Create a text box on the newly created slide
+					{
+						createShape: {
+							objectId: textBoxId,
+							shapeType: "TEXT_BOX",
+							elementProperties: {
+								pageObjectId: slideId, // The slide we just created
+								size: {
+									width: { magnitude: 3000000, unit: "EMU" },
+									height: { magnitude: 3000000, unit: "EMU" },
+								},
+								transform: {
+									scaleX: 1,
+									scaleY: 1,
+									translateX: 100000,
+									translateY: 100000,
+									unit: "EMU",
+								},
+							},
+						},
+					},
+					// Step 3: Insert text into the created text box
 					{
 						insertText: {
-							objectId: slideObjectId,
+							objectId: textBoxId,
 							text: title,
-							insertionIndex: 0, // Insert at the beginning of the text box
+							insertionIndex: 0,
 						},
 					},
 				],
