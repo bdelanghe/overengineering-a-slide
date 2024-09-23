@@ -1,7 +1,8 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes";
-import presentationRoutes from "./routes/presentationRoutes"; // Add presentation routes
+import presentationRoutes from "./routes/presentationRoutes"; // Presentation routes
+import pageRoutes from "./routes/pageRoutes"; // Add page (slide) routes
 import { setupSwaggerDocs } from "./swagger";
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(cors());
 // Register routes
 app.use("/auth", authRoutes); // Route for authentication-related routes
 app.use("/api/presentations", presentationRoutes); // Route for presentation-related routes
+app.use("/api/pages", pageRoutes); // Route for page (slide) related routes
 
 // Setup Swagger documentation
 setupSwaggerDocs(app);
