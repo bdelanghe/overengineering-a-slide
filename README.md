@@ -4,12 +4,6 @@
 
 ---
 
-## **Project Overview**
-
-This project explores the ironic complexity of automating the creation of a single Google Slide using the Google Slides API. While the task at hand seems simple, the journey demonstrates how overengineering can turn a straightforward problem into a fun, learning experience. The slide itself is programmatically generated, showcasing the power (and complexity) of automation.
-
----
-
 ## **Why This Project?**
 
 As an integrations engineer, I often tackle tasks that involve automating workflows between different systems. This project is a playful example of how even the simplest tasks can evolve into elaborate processes when approached with automation. It serves as both an exploration of the Google Slides API and a humorous reflection on the engineer’s tendency to overcomplicate.
@@ -29,6 +23,13 @@ As an integrations engineer, I often tackle tasks that involve automating workfl
   - Illustrates overengineering by turning a simple task into a complex automation journey
 
 ---
+
+## **Project Overview**
+
+This project explores the ironic complexity of automating the creation of a single Google Slide using the Google Slides API. While the task at hand seems simple, the journey demonstrates how overengineering can turn a straightforward problem into a fun, learning experience. The slide itself is programmatically generated, showcasing the power (and complexity) of automation.
+
+---
+
 
 ## **How to Run the Project**
 
